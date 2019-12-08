@@ -88,10 +88,12 @@ func (b *BotAPI) handleMessage() error {
 				replyToUser.Text = "К сожалению, я не знаю такую команду 😭\nОднако, ты можешь скинуть мне ссылку на статья и я скажу сколько там символов 😉"
 			}
 			b.bot.Send(replyToUser)
+			continue
 		}
 		if update.Message.Text == "" || !b.verifyLink(update.Message.Text) {
 			txt := "Мне бы ссылочку на статью, а не вот этот вот всё"
 			b.bot.Send(tgbotapi.NewMessage(userID, txt))
+			continue
 		}
 		replyToUser := tgbotapi.NewMessage(userID, "")
 		if size, err := b.scraper.GetCountSymbols(update.Message.Text); err != nil {
