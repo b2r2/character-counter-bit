@@ -85,7 +85,7 @@ func (b *BotAPI) handleMessage() error {
 			if update.Message.Command() == "start" {
 				replyToUser.Text = "Привет! Я помогу тебе подсчитать количество символов в статье! Скинь мне ссылку на статью и я скажу сколько там символов 😉"
 			} else {
-				replyToUser.Text = "К сожалению, я не знаю такую команду 😭\nОднако, ты можешь скинуть мне ссылку на статья и я скажу сколько там символов 😉"
+				replyToUser.Text = "К сожалению, я не знаю такую команду 😭\nОднако, ты можешь скинуть мне ссылку на статью и я скажу сколько там символов 😉"
 			}
 			b.bot.Send(replyToUser)
 			continue
@@ -122,7 +122,7 @@ func (b *BotAPI) verifyLink(msg string) bool {
 	line := strings.Split(msg, "://")
 	if len(line) == 2 {
 		line := strings.Split(line[1], ".")
-		for _, s := range []string{"medium", "nuancesprog"} {
+		for _, s := range []string{scrape.MEDIUM, b.config.Scraper.WebSite} {
 			if line[0] == s {
 				state = true
 				break
