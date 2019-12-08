@@ -1,1 +1,1 @@
-# character-counter-bit
+# character-counter-bot
