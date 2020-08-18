@@ -27,7 +27,7 @@ func main() {
 	}
 
 	b := app.New(config)
-	if err := b.Start(); err != nil {
+	if err := b.Run(); err != nil {
 		log.Fatal(err)
 	}
 

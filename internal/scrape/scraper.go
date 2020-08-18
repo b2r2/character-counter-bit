@@ -25,7 +25,7 @@ func New(config *Config) *Scraper {
 
 // GetCountSymbols ...
 func (s *Scraper) GetCountSymbols(url string) (int, error) {
-	caller := map[string]func(string) string{
+	getter := map[string]func(string) string{
 		MEDIUM:           s.parseMedium,
 		s.config.WebSite: s.parseWp,
 	}
@@ -34,7 +34,7 @@ func (s *Scraper) GetCountSymbols(url string) (int, error) {
 		return strings.Split(line[1], ".")[0]
 	}(url)
 
-	raw := caller[name](url)
+	raw := getter[name](url)
 	text, err := s.getCyrillicText(raw)
 	if err != nil {
 		return 0, err
@@ -80,31 +80,31 @@ func (s *Scraper) parseWp(url string) string {
 }
 
 func handleBody(v interface{}) string {
-	var t string
+	var s string
 	switch b := v.(type) {
 	case MediumResponse:
 		for _, ps := range b.Payload.Value.Content.Article.Paragraphs {
 			for _, p := range ps.Text {
-				t += string(p)
+				s += string(p)
 			}
 		}
 	case WPResponse:
-		t = b.Content.Rendered
+		s = b.Content.Rendered
 	}
-	return t
+	return s
 }
 
-func (s *Scraper) getCyrillicText(cnt string) (string, error) {
+func (s *Scraper) getCyrillicText(content string) (string, error) {
 	re, err := regexp.Compile("\\p{Cyrillic}")
 	if err != nil {
 		return "", fmt.Errorf("Ошибка парсинга")
 	}
-	tmp := re.FindAllString(cnt, -1)
-	var total string
+	tmp := re.FindAllString(content, -1)
+	var text string
 	for _, t := range tmp {
-		total += t
+		text += t
 	}
-	return total, nil
+	return text, nil
 }
 
 func handleLink(s string) string {

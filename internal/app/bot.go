@@ -27,8 +27,8 @@ func New(config *Config) *BotAPI {
 	}
 }
 
-// Start ...
-func (b *BotAPI) Start() error {
+// Run ...
+func (b *BotAPI) Run() error {
 	if err := b.configureLogger(); err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (b *BotAPI) Start() error {
 
 	logrus.Infof("Authorized on account %s, debuging mode: %t", b.bot.Self.UserName, b.config.BotLogLevel)
 
-	if err := b.handleMessage(); err != nil {
+	if err := b.handleUpdates(); err != nil {
 		return err
 	}
 	return nil
@@ -59,11 +59,11 @@ func (b *BotAPI) configureBot() error {
 }
 
 func (b *BotAPI) configureScraper() {
-	sc := scrape.New(b.config.Scraper)
-	b.scraper = sc
+	c := scrape.New(b.config.Scraper)
+	b.scraper = c
 }
 
-func (b *BotAPI) handleMessage() error {
+func (b *BotAPI) handleUpdates() error {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates, err := b.bot.GetUpdatesChan(u)
@@ -76,12 +76,14 @@ func (b *BotAPI) handleMessage() error {
 			continue
 		}
 		user := update.Message.From.UserName
+		userID := int64(update.Message.From.ID)
+		replyToUser := tgbotapi.NewMessage(userID, "")
 		if !b.verifyUser(user) {
+			replyToUser.Text = "401 Unauthorized"
+			b.bot.Send(replyToUser)
 			continue
 		}
-		userID := int64(update.Message.From.ID)
 		if update.Message.IsCommand() {
-			replyToUser := tgbotapi.NewMessage(userID, "")
 			if update.Message.Command() == "start" {
 				replyToUser.Text = "Привет! Я помогу тебе подсчитать количество символов в статье! Скинь мне ссылку на статью и я скажу сколько там символов 😉"
 			} else {
@@ -91,11 +93,10 @@ func (b *BotAPI) handleMessage() error {
 			continue
 		}
 		if update.Message.Text == "" || !b.verifyLink(update.Message.Text) {
-			txt := "Мне бы ссылочку на статью, а не вот этот вот всё"
-			b.bot.Send(tgbotapi.NewMessage(userID, txt))
+			replyToUser.Text = "Мне бы ссылочку на статью, а не вот этот вот всё"
+			b.bot.Send(replyToUser)
 			continue
 		}
-		replyToUser := tgbotapi.NewMessage(userID, "")
 		if size, err := b.scraper.GetCountSymbols(update.Message.Text); err != nil {
 			replyToUser.Text = fmt.Sprintf("Что-то пошло не так: %v", err)
 		} else {
@@ -106,30 +107,26 @@ func (b *BotAPI) handleMessage() error {
 	return nil
 }
 
-func (b *BotAPI) verifyUser(user string) bool {
-	state := false
-	for _, au := range b.config.AccessUsers {
-		if au == user {
+func (b *BotAPI) verifyUser(user string) (state bool) {
+	for _, u := range b.config.AccessUsers {
+		if u == user {
 			state = true
 			break
 		}
 	}
-	return state
+	return
 }
 
-func (b *BotAPI) verifyLink(msg string) bool {
-	state := false
+func (b *BotAPI) verifyLink(msg string) (state bool) {
 	line := strings.Split(msg, "://")
 	if len(line) == 2 {
-		line := strings.Split(line[1], ".")
-		for _, s := range []string{scrape.MEDIUM, b.config.Scraper.WebSite} {
-			if line[0] == s {
-				state = true
-				break
-			}
+		name := strings.Split(line[1], ".")
+		switch name[0] {
+		case scrape.MEDIUM, b.config.Scraper.WebSite:
+			state = true
 		}
 	}
-	return state
+	return
 }
 
 func (b *BotAPI) configureLogger() error {
