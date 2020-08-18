@@ -13,6 +13,7 @@ require (
 	github.com/gocolly/colly v1.2.0
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
+	github.com/medium/medium-sdk-go v0.0.0-20171230201202-4daca056cf6a
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect

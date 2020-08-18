@@ -6,6 +6,10 @@ type Config struct {
 	Password string `toml:"password"`
 	API      string `toml:"api"`
 	WebSite  string `toml:"website"`
+
+	MIToken       string `toml:"mIToken"`
+	MClientID     string `toml:"mClientID"`
+	MClientSecret string `toml:"mClientSecret"`
 }
 
 // NewConfig ...
