@@ -10,6 +10,7 @@ type Config struct {
 	BotLogLevel bool     `toml:"bot_log_level"`
 	AccessUsers []string `toml:"access_users"`
 	Scraper     *scrape.Config
+	Text        map[string]string `toml:"messages"`
 }
 
 // NewConfig ...
@@ -18,5 +19,6 @@ func NewConfig() *Config {
 		LogLevel:    "debug",
 		BotLogLevel: true,
 		Scraper:     scrape.NewConfig(),
+		Text:        make(map[string]string),
 	}
 }

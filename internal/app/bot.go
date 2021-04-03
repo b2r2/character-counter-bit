@@ -7,7 +7,7 @@ import (
 
 	"github.com/b2r2/character-counter-bot/internal/scrape"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	api "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,7 +15,7 @@ import (
 type BotAPI struct {
 	config  *Config
 	logger  *logrus.Logger
-	bot     *tgbotapi.BotAPI
+	bot     *api.BotAPI
 	scraper *scrape.Scraper
 }
 
@@ -30,26 +30,30 @@ func New(config *Config) *BotAPI {
 // Run ...
 func (b *BotAPI) Run() error {
 	if err := b.configureLogger(); err != nil {
+		logrus.Println("configure logger:", err)
 		return err
 	}
 
 	if err := b.configureBot(); err != nil {
+		b.logger.Println("configure bot:", err)
 		return err
 	}
 
 	b.configureScraper()
 
-	logrus.Infof("Authorized on account %s, debuging mode: %t", b.bot.Self.UserName, b.config.BotLogLevel)
+	b.logger.Infof("Authorized on account %s, debuging mode: %t", b.bot.Self.UserName, b.config.BotLogLevel)
 
 	if err := b.handleUpdates(); err != nil {
+		b.logger.Println("handle updates:", err)
 		return err
 	}
 	return nil
 }
 
 func (b *BotAPI) configureBot() error {
-	bot, err := tgbotapi.NewBotAPI(b.config.Token)
+	bot, err := api.NewBotAPI(b.config.Token)
 	if err != nil {
+		b.logger.Println("configure bot:", err)
 		return err
 	}
 	bot.Debug = b.config.BotLogLevel
@@ -64,10 +68,11 @@ func (b *BotAPI) configureScraper() {
 }
 
 func (b *BotAPI) handleUpdates() error {
-	u := tgbotapi.NewUpdate(0)
+	u := api.NewUpdate(0)
 	u.Timeout = 60
 	updates, err := b.bot.GetUpdatesChan(u)
 	if err != nil {
+		b.logger.Println("get updates:", err)
 		return err
 	}
 
@@ -77,37 +82,51 @@ func (b *BotAPI) handleUpdates() error {
 		}
 		user := update.Message.From.UserName
 		userID := int64(update.Message.From.ID)
-		replyToUser := tgbotapi.NewMessage(userID, "")
+		replyToUser := api.NewMessage(userID, "")
 		if !b.verifyUser(user) {
 			replyToUser.Text = "401 Unauthorized"
-			b.bot.Send(replyToUser)
+			if _, err := b.bot.Send(replyToUser); err != nil {
+				b.logger.Println("send error:", err)
+				return err
+			}
 			continue
 		}
 		if update.Message.IsCommand() {
 			if update.Message.Command() == "start" {
-				replyToUser.Text = "Привет! Я помогу тебе подсчитать количество символов в статье! Скинь мне ссылку на статью и я скажу сколько там символов 😉"
+				replyToUser.Text = b.config.Text["first_message"]
 			} else {
-				replyToUser.Text = "К сожалению, я не знаю такую команду 😭\nОднако, ты можешь скинуть мне ссылку на статью и я скажу сколько там символов 😉"
+				replyToUser.Text = b.config.Text["unknown"]
 			}
-			b.bot.Send(replyToUser)
+			if _, err := b.bot.Send(replyToUser); err != nil {
+				b.logger.Println("send error:", err)
+				return err
+			}
 			continue
 		}
 		if update.Message.Text == "" || !b.verifyLink(update.Message.Text) {
-			replyToUser.Text = "Мне бы ссылочку на статью, а не вот этот вот всё"
-			b.bot.Send(replyToUser)
+			replyToUser.Text = b.config.Text["wrong_link"]
+			if _, err := b.bot.Send(replyToUser); err != nil {
+				b.logger.Println("send error:", err)
+				return err
+			}
 			continue
 		}
 		if size, err := b.scraper.GetCountSymbols(update.Message.Text); err != nil {
-			replyToUser.Text = fmt.Sprintf("Что-то пошло не так: %v", err)
+			b.logger.Println("get count:", err)
+			replyToUser.Text = fmt.Sprintf("%s: %v", b.config.Text["error"], err)
 		} else {
 			replyToUser.Text = strconv.Itoa(size)
 		}
-		b.bot.Send(replyToUser)
+		if _, err := b.bot.Send(replyToUser); err != nil {
+			b.logger.Println("send error:", err)
+			return err
+		}
 	}
 	return nil
 }
 
 func (b *BotAPI) verifyUser(user string) (state bool) {
+	fmt.Println(b.config.AccessUsers, user)
 	for _, u := range b.config.AccessUsers {
 		if u == user {
 			state = true
@@ -122,7 +141,7 @@ func (b *BotAPI) verifyLink(msg string) (state bool) {
 	if len(line) == 2 {
 		name := strings.Split(line[1], ".")
 		switch name[0] {
-		case scrape.MEDIUM, b.config.Scraper.WebSite:
+		case b.config.Scraper.Medium, b.config.Scraper.WebSite:
 			state = true
 		}
 	}

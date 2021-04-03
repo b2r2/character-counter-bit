@@ -6,6 +6,7 @@ type Config struct {
 	Password string `toml:"password"`
 	API      string `toml:"api"`
 	WebSite  string `toml:"website"`
+	Medium   string `toml:"medium"`
 }
 
 // NewConfig ...
