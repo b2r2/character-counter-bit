@@ -2,15 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ef3d8fda-59ba-4075-9be4-3e10a1e422c0" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/internal/scrape/medium.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/internal/scrape/wordpress.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/app/bot.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/bot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/scrape/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/config.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/scrape/model.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/scrape/medium.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/medium.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/scrape/scraper.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/scraper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/scrape/wordpress.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/wordpress.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

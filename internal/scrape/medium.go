@@ -2,6 +2,7 @@ package scrape
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gocolly/colly"
 	"regexp"
 )
@@ -19,32 +20,40 @@ type mediumResponse struct {
 			} `json:"content"`
 		} `json:"value"`
 	} `json:"payload"`
+	collector *colly.Collector
 }
 
 type Data struct {
 	Text string `json:"text,omitempty"`
 }
 
-func (m *mediumResponse) parse(s string) (content string, err error) {
+func NewMediumResponse() Scrape {
+	return &mediumResponse{
+		collector: colly.NewCollector(),
+	}
+}
+
+func (m *mediumResponse) parse(s string) (string, error) {
 	if re := regexp.MustCompile(`edit$`); re.MatchString(s) {
 		s = re.ReplaceAllString(s, "")
 	}
-	c := colly.NewCollector()
-	c.OnRequest(func(r *colly.Request) {
+	m.collector.OnRequest(func(r *colly.Request) {
 		r.Method = "GET"
 		r.Headers.Add("Accept", "application/json")
 	})
-	c.OnResponse(func(r *colly.Response) {
-		if e := json.Unmarshal(r.Body[16:], &m); e != nil {
-			err = e
+	var stage bool
+	m.collector.OnResponse(func(r *colly.Response) {
+		if err := json.Unmarshal(r.Body[16:], &m); err != nil {
+			stage = true
 		}
 	})
-	if err != nil {
+	if stage {
+		return "", errors.New("medium unmarshal error")
+	}
+	if err := m.collector.Visit(s); err != nil {
 		return "", err
 	}
-	if err := c.Visit(s); err != nil {
-		return "", err
-	}
+	var content string
 	for _, ps := range m.Payload.Value.Content.Article.Paragraphs {
 		for _, p := range ps.Text {
 			content += string(p)

@@ -126,7 +126,6 @@ func (b *BotAPI) handleUpdates() error {
 }
 
 func (b *BotAPI) verifyUser(user string) (state bool) {
-	fmt.Println(b.config.AccessUsers, user)
 	for _, u := range b.config.AccessUsers {
 		if u == user {
 			state = true

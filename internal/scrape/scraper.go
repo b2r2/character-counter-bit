@@ -23,7 +23,7 @@ func New(config *Config) *Scraper {
 
 func (s *Scraper) GetCountSymbols(url string) (int, error) {
 	get := map[string]Scrape{
-		s.config.Medium:  &mediumResponse{},
+		s.config.Medium:  NewMediumResponse(),
 		s.config.WebSite: NewWordpressResponse(*s.config),
 	}
 	rawData, err := parse(get[func(url string) string {
