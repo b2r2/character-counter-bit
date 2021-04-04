@@ -1,11 +1,18 @@
-log_level = "debug"
-token = "TOKEN API"
-chat_id = -1234567890
-bot_log_level = true
-access_users = ["username", "username2"]
+log_level = <LOGGER LEVEL>
+token = <TOKEN>
+chat_id = <CHAT ID>
+bot_log_level = <LOG LEVEL>
+access_users = [...]
+
+[messages]
+unknown =
+first_massage =
+wrong_link =
+error =
 
 [scraper]
-website = "your website"
-login = "login"
-password = "password"
-api = "https://website/wp-json/wp/v2/posts/"
+medium = "medium"
+website =
+login =
+password =
+api =
