@@ -2,9 +2,9 @@ package scrape
 
 import (
 	"encoding/json"
-	"errors"
-	"github.com/gocolly/colly"
 	"regexp"
+
+	"github.com/gocolly/colly"
 )
 
 type mediumResponse struct {
@@ -48,7 +48,7 @@ func (m *mediumResponse) parse(s string) (string, error) {
 		}
 	})
 	if stage {
-		return "", errors.New("medium unmarshal error")
+		return "", ErrUnmarshal
 	}
 	if err := m.collector.Visit(s); err != nil {
 		return "", err

@@ -3,10 +3,10 @@ package scrape
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/gocolly/colly"
 	"regexp"
+
+	"github.com/gocolly/colly"
 )
 
 type wordpressResponse struct {
@@ -48,7 +48,7 @@ func (w *wordpressResponse) parse(s string) (string, error) {
 		}
 	})
 	if stage {
-		return "", errors.New("wordpress unmarshal error")
+		return "", ErrUnmarshal
 	}
 	if err := w.collector.Visit(url); err != nil {
 		return "", err

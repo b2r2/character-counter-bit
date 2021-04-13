@@ -1,11 +1,14 @@
 package scrape
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"unicode/utf8"
 )
+
+var ErrUnmarshal = errors.New("unmarshal error")
 
 type Scraper struct {
 	config *Config
@@ -51,7 +54,7 @@ func parse(s Scrape, url string) (string, error) {
 func (s *Scraper) getCyrillicText(content string) (string, error) {
 	re, err := regexp.Compile(`\p{Cyrillic}`)
 	if err != nil {
-		return "", fmt.Errorf("ошибка парсинга: %v\n", err)
+		return "", fmt.Errorf("parsing error: %w\n", err)
 	}
 	var text string
 	for _, t := range re.FindAllString(content, -1) {
