@@ -90,12 +90,14 @@ func (b *BotAPI) configureWebhook() error {
 	b.updates = b.bot.ListenForWebhook("/" + b.config.Token)
 
 	errCh := make(chan error)
+	defer close(errCh)
 	go func() {
 		if err := http.ListenAndServeTLS(b.config.Webhook.Addr, "cert.pem", "key.pem", nil); err != nil {
 			errCh <- err
 		}
 	}()
-	if err, ok := <-errCh; ok {
+
+	if err := <-errCh; err != nil {
 		return err
 	}
 	return nil
