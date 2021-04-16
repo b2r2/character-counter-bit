@@ -8,9 +8,7 @@ import (
 	"github.com/b2r2/character-counter-bot/internal/app"
 )
 
-var (
-	configPath string
-)
+var configPath string
 
 func init() {
 	flag.StringVar(&configPath, "config-path", "./configs/bot.toml", "path to config file")
@@ -26,9 +24,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	b := app.New(config)
+	b, err := app.New(config)
+	if err != nil {
+		log.Fatal(err)
+	}
 	if err := b.Run(); err != nil {
 		log.Fatal(err)
 	}
-
 }

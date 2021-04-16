@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/pkg/errors"
+
 	"github.com/gocolly/colly"
 )
 
@@ -18,7 +20,7 @@ type wordpressResponse struct {
 	authHeaderValue string
 }
 
-func NewWordpressResponse(config Config) Scrape {
+func NewWordpressResponse(config Config) Parser {
 	return &wordpressResponse{
 		config:          config,
 		collector:       colly.NewCollector(),
@@ -37,21 +39,26 @@ func (w *wordpressResponse) parse(s string) (string, error) {
 		return string(re.Find([]byte(s)))
 	}(s)
 	url := w.config.API + item
+	if err := w.visit(url); err != nil {
+		return "", err
+	}
+
+	return w.Content.Rendered, nil
+}
+
+func (w *wordpressResponse) visit(s string) error {
 	w.collector.OnRequest(func(r *colly.Request) {
 		r.Headers.Add("Authorization", w.authHeaderValue)
 	})
 
-	var stage bool
+	var err error
 	w.collector.OnResponse(func(r *colly.Response) {
-		if err := json.Unmarshal(r.Body, &w); err != nil {
-			stage = true
+		if e := json.Unmarshal(r.Body, &w); e != nil {
+			err = e
 		}
 	})
-	if stage {
-		return "", ErrUnmarshal
+	if err != nil {
+		return err
 	}
-	if err := w.collector.Visit(url); err != nil {
-		return "", err
-	}
-	return w.Content.Rendered, nil
+	return errors.Wrap(w.collector.Visit(s), "on visit")
 }
