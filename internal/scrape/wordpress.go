@@ -38,6 +38,10 @@ func (w *wordpressResponse) parse(s string) (string, error) {
 		re := regexp.MustCompile(`[0-9]+`)
 		return string(re.Find([]byte(s)))
 	}(s)
+	if item == "" {
+		return "", fmt.Errorf("invalid URL")
+	}
+
 	url := w.config.API + item
 	if err := w.visit(url); err != nil {
 		return "", err

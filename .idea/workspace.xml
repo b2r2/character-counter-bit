@@ -3,12 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ef3d8fda-59ba-4075-9be4-3e10a1e422c0" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmd/bot/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/bot/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/bot.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/bot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/scrape/medium.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/medium.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/scrape/scraper.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/scrape.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/scrape/wordpress.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/wordpress.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -25,6 +19,11 @@
   </component>
   <component name="GOROOT" url="file:///opt/homebrew/Cellar/go/1.16.3/libexec" />
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="concurrency" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitSEFilterConfiguration">
