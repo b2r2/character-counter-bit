@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"regexp"
 
+	"github.com/pkg/errors"
+
 	"github.com/gocolly/colly"
 )
 
@@ -27,7 +29,7 @@ type Data struct {
 	Text string `json:"text,omitempty"`
 }
 
-func NewMediumResponse() Scrape {
+func NewMediumResponse() Parser {
 	return &mediumResponse{
 		collector: colly.NewCollector(),
 	}
@@ -37,20 +39,8 @@ func (m *mediumResponse) parse(s string) (string, error) {
 	if re := regexp.MustCompile(`edit$`); re.MatchString(s) {
 		s = re.ReplaceAllString(s, "")
 	}
-	m.collector.OnRequest(func(r *colly.Request) {
-		r.Method = "GET"
-		r.Headers.Add("Accept", "application/json")
-	})
-	var stage bool
-	m.collector.OnResponse(func(r *colly.Response) {
-		if err := json.Unmarshal(r.Body[16:], &m); err != nil {
-			stage = true
-		}
-	})
-	if stage {
-		return "", ErrUnmarshal
-	}
-	if err := m.collector.Visit(s); err != nil {
+
+	if err := m.visit(s); err != nil {
 		return "", err
 	}
 	var content string
@@ -60,4 +50,21 @@ func (m *mediumResponse) parse(s string) (string, error) {
 		}
 	}
 	return content, nil
+}
+
+func (m *mediumResponse) visit(s string) error {
+	m.collector.OnRequest(func(r *colly.Request) {
+		r.Method = "GET"
+		r.Headers.Add("Accept", "application/json")
+	})
+	var err error
+	m.collector.OnResponse(func(r *colly.Response) {
+		if e := json.Unmarshal(r.Body[16:], &m); e != nil {
+			err = e
+		}
+	})
+	if err != nil {
+		return err
+	}
+	return errors.Wrap(m.collector.Visit(s), "on visit")
 }

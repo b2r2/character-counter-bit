@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/pkg/errors"
+
 	"github.com/b2r2/character-counter-bot/internal/scrape"
 	api "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/sirupsen/logrus"
@@ -16,37 +18,39 @@ type BotAPI struct {
 	config  *Config
 	logger  *logrus.Logger
 	bot     *api.BotAPI
-	scraper *scrape.Scraper
+	scrape  *scrape.Scrape
 	updates api.UpdatesChannel
 }
 
 // New ...
-func New(config *Config) *BotAPI {
-	return &BotAPI{
-		config:  config,
-		logger:  logrus.New(),
-		scraper: scrape.New(config.Scraper),
+func New(config *Config) (*BotAPI, error) {
+	b := &BotAPI{
+		config: config,
+		logger: logrus.New(),
+		scrape: scrape.New(config.Scraper),
 	}
+	bot, err := initBot(config.Token)
+	if err != nil {
+		return nil, fmt.Errorf("bot initialization error %w\n", err)
+	}
+	b.bot = bot
+	b.bot.Debug = config.BotLogLevel
+	return b, nil
 }
 
 // Run ...
 func (b *BotAPI) Run() error {
 	g := errgroup.Group{}
+	goScrape := map[bool]func() error{
+		true:  b.configureWebhook,
+		false: b.configureUpdates,
+	}
 	g.Go(func() error {
 		if err := b.configureLogger(); err != nil {
 			logrus.Errorln("configure logger:", err)
 			return err
 		}
 
-		if err := b.configureBot(); err != nil {
-			b.logger.Errorln("configure bot:", err)
-			return err
-		}
-
-		goScrape := map[bool]func() error{
-			true:  b.configureWebhook,
-			false: b.configureUpdates,
-		}
 		if err := goScrape[b.config.Webhook.IsWebhook](); err != nil {
 			return err
 		}
@@ -56,22 +60,21 @@ func (b *BotAPI) Run() error {
 		return err
 	}
 	b.logger.Infof("Authorized on account %s, debuging mode: %t", b.bot.Self.UserName, b.config.BotLogLevel)
-	return b.handleUpdates()
+	return errors.Wrap(b.handleUpdates(), "handle updates:")
 }
 
-func (b *BotAPI) configureBot() error {
-	bot, err := api.NewBotAPI(b.config.Token)
+func initBot(token string) (*api.BotAPI, error) {
+	bot, err := api.NewBotAPI(token)
 	if err != nil {
-		b.logger.Errorln("configure bot:", err)
-		return err
+		return nil, err
 	}
-	bot.Debug = b.config.BotLogLevel
-
-	b.bot = bot
-	return nil
+	return bot, nil
 }
 
 func (b *BotAPI) configureWebhook() error {
+	if err := b.removeWebhook(); err != nil {
+		return err
+	}
 	if _, err := b.bot.SetWebhook(api.NewWebhookWithCert(
 		b.config.Webhook.Cert+b.config.Token, "cert.pem",
 	)); err != nil {
@@ -90,18 +93,32 @@ func (b *BotAPI) configureWebhook() error {
 	b.updates = b.bot.ListenForWebhook("/" + b.config.Token)
 
 	errCh := make(chan error)
+	defer close(errCh)
 	go func() {
 		if err := http.ListenAndServeTLS(b.config.Webhook.Addr, "cert.pem", "key.pem", nil); err != nil {
 			errCh <- err
 		}
 	}()
-	if err, ok := <-errCh; ok {
+
+	if err := <-errCh; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *BotAPI) removeWebhook() error {
+	if _, err := b.bot.RemoveWebhook(); err != nil {
+		b.logger.Errorln("configure webhook: remove webhook:", err)
 		return err
 	}
 	return nil
 }
 
 func (b *BotAPI) configureUpdates() error {
+	if err := b.removeWebhook(); err != nil {
+		return err
+	}
+
 	u := api.NewUpdate(0)
 	u.Timeout = 60
 	updates, err := b.bot.GetUpdatesChan(u)
@@ -162,7 +179,7 @@ func (b *BotAPI) handleUpdates() error {
 			}
 			continue
 		}
-		if size, err := b.scraper.GetCountSymbols(update.Message.Text); err != nil {
+		if size, err := b.scrape.GetCountSymbols(update.Message.Text); err != nil {
 			b.logger.Println("get count:", err)
 			replyToUser.Text = fmt.Sprintf("%s: %v", b.config.Text["error"], err)
 		} else {

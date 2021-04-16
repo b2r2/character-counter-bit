@@ -1,31 +1,28 @@
 package scrape
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"unicode/utf8"
 )
 
-var ErrUnmarshal = errors.New("unmarshal error")
-
-type Scraper struct {
+type Scrape struct {
 	config *Config
 }
 
-type Scrape interface {
+type Parser interface {
 	parse(string) (string, error)
 }
 
-func New(config *Config) *Scraper {
-	return &Scraper{
+func New(config *Config) *Scrape {
+	return &Scrape{
 		config: config,
 	}
 }
 
-func (s *Scraper) GetCountSymbols(url string) (int, error) {
-	get := map[string]Scrape{
+func (s *Scrape) GetCountSymbols(url string) (int, error) {
+	get := map[string]Parser{
 		s.config.Medium:  NewMediumResponse(),
 		s.config.WebSite: NewWordpressResponse(*s.config),
 	}
@@ -34,31 +31,31 @@ func (s *Scraper) GetCountSymbols(url string) (int, error) {
 		return strings.Split(line[1], ".")[0]
 	}(url)], url)
 	if err != nil {
-		return -1, err
+		return -1, fmt.Errorf("parsing error: %w\n", err)
 	}
 	text, err := s.getCyrillicText(rawData)
 	if err != nil {
-		return -1, err
+		return -1, fmt.Errorf("get cyrillic error: %w\n", err)
 	}
 	return utf8.RuneCountInString(text), nil
 }
 
-func parse(s Scrape, url string) (string, error) {
-	content, err := s.parse(url)
-	if err != nil {
-		return "", err
-	}
-	return content, nil
-}
-
-func (s *Scraper) getCyrillicText(content string) (string, error) {
+func (s *Scrape) getCyrillicText(content string) (string, error) {
 	re, err := regexp.Compile(`\p{Cyrillic}`)
 	if err != nil {
-		return "", fmt.Errorf("parsing error: %w\n", err)
+		return "", err
 	}
 	var text string
 	for _, t := range re.FindAllString(content, -1) {
 		text += t
 	}
 	return text, nil
+}
+
+func parse(p Parser, url string) (string, error) {
+	content, err := p.parse(url)
+	if err != nil {
+		return "", err
+	}
+	return content, nil
 }

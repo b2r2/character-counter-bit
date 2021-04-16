@@ -2,15 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ef3d8fda-59ba-4075-9be4-3e10a1e422c0" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/internal/app/utils.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/watcherTasks.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/watcherTasks.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/bot/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/bot/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/app/bot.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/bot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/app/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/app/config.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/scrape/medium.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/medium.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/internal/scrape/scraper.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/scraper.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/scrape/scraper.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/scrape.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/internal/scrape/wordpress.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/scrape/wordpress.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -29,11 +27,19 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/internal/scrape/scraper.go" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/internal/scrape/scrape.go" root0="SKIP_INSPECTION" />
   </component>
   <component name="ProjectId" id="1pJ05uxi5POuc0Dz0ZcVqXvm6Sf" />
   <component name="ProjectViewState">
