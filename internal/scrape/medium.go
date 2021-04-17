@@ -57,13 +57,12 @@ func (m *mediumResponse) visit(s string) error {
 		r.Method = "GET"
 		r.Headers.Add("Accept", "application/json")
 	})
-	var err error
-	m.collector.OnResponse(func(r *colly.Response) {
-		if e := json.Unmarshal(r.Body[16:], &m); e != nil {
-			err = e
-		}
-	})
-	if err != nil {
+	if err := func() (err error) {
+		m.collector.OnResponse(func(r *colly.Response) {
+			err = json.Unmarshal(r.Body[16:], &m)
+		})
+		return
+	}(); err != nil {
 		return err
 	}
 	return errors.Wrap(m.collector.Visit(s), "on visit")

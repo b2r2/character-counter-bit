@@ -43,11 +43,7 @@ func (w *wordpressResponse) parse(s string) (string, error) {
 	}
 
 	url := w.config.API + item
-	if err := w.visit(url); err != nil {
-		return "", err
-	}
-
-	return w.Content.Rendered, nil
+	return w.Content.Rendered, w.visit(url)
 }
 
 func (w *wordpressResponse) visit(s string) error {
@@ -55,14 +51,14 @@ func (w *wordpressResponse) visit(s string) error {
 		r.Headers.Add("Authorization", w.authHeaderValue)
 	})
 
-	var err error
-	w.collector.OnResponse(func(r *colly.Response) {
-		if e := json.Unmarshal(r.Body, &w); e != nil {
-			err = e
-		}
-	})
-	if err != nil {
+	if err := func() (err error) {
+		w.collector.OnResponse(func(r *colly.Response) {
+			err = json.Unmarshal(r.Body, &w)
+		})
+		return
+	}(); err != nil {
 		return err
 	}
+
 	return errors.Wrap(w.collector.Visit(s), "on visit")
 }

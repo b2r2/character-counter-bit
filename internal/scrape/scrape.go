@@ -7,12 +7,12 @@ import (
 	"unicode/utf8"
 )
 
-type Scrape struct {
-	config *Config
-}
-
 type Parser interface {
 	parse(string) (string, error)
+}
+
+type Scrape struct {
+	config *Config
 }
 
 func New(config *Config) *Scrape {
@@ -53,9 +53,5 @@ func (s *Scrape) getCyrillicText(content string) (string, error) {
 }
 
 func parse(p Parser, url string) (string, error) {
-	content, err := p.parse(url)
-	if err != nil {
-		return "", err
-	}
-	return content, nil
+	return p.parse(url)
 }

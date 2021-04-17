@@ -29,7 +29,7 @@ func New(config *Config) (*BotAPI, error) {
 		logger: logrus.New(),
 		scrape: scrape.New(config.Scraper),
 	}
-	bot, err := initBot(config.Token)
+	bot, err := api.NewBotAPI(config.Token)
 	if err != nil {
 		return nil, fmt.Errorf("bot initialization error %w\n", err)
 	}
@@ -60,15 +60,8 @@ func (b *BotAPI) Run() error {
 		return err
 	}
 	b.logger.Infof("Authorized on account %s, debuging mode: %t", b.bot.Self.UserName, b.config.BotLogLevel)
+	// TODO: error for webhook
 	return errors.Wrap(b.handleUpdates(), "handle updates:")
-}
-
-func initBot(token string) (*api.BotAPI, error) {
-	bot, err := api.NewBotAPI(token)
-	if err != nil {
-		return nil, err
-	}
-	return bot, nil
 }
 
 func (b *BotAPI) configureWebhook() error {
