@@ -39,7 +39,7 @@ func (w *wordpressResponse) parse(s string) (string, error) {
 		return string(re.Find([]byte(s)))
 	}(s)
 	if item == "" {
-		return "", fmt.Errorf("invalid URL")
+		return "", errors.New("invalid URL")
 	}
 
 	url := w.config.API + item

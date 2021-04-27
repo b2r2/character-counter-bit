@@ -2,7 +2,6 @@ package app
 
 import "github.com/b2r2/character-counter-bot/internal/scrape"
 
-// Config ...
 type Config struct {
 	Token       string            `toml:"token"`
 	ChatID      int64             `toml:"chat_id"`
@@ -18,7 +17,6 @@ type Config struct {
 	Scraper *scrape.Config
 }
 
-// NewConfig ...
 func NewConfig() *Config {
 	return &Config{
 		LogLevel:    "debug",

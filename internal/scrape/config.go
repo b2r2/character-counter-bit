@@ -1,6 +1,5 @@
 package scrape
 
-// Config ...
 type Config struct {
 	Login    string `toml:"login"`
 	Password string `toml:"password"`
@@ -9,7 +8,6 @@ type Config struct {
 	Medium   string `toml:"medium"`
 }
 
-// NewConfig ...
 func NewConfig() *Config {
 	return &Config{}
 }

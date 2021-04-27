@@ -10,10 +10,8 @@ import (
 	"github.com/b2r2/character-counter-bot/internal/scrape"
 	api "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 )
 
-// BotAPI ...
 type BotAPI struct {
 	config  *Config
 	logger  *logrus.Logger
@@ -22,7 +20,6 @@ type BotAPI struct {
 	updates api.UpdatesChannel
 }
 
-// New ...
 func New(config *Config) (*BotAPI, error) {
 	b := &BotAPI{
 		config: config,
@@ -38,25 +35,17 @@ func New(config *Config) (*BotAPI, error) {
 	return b, nil
 }
 
-// Run ...
 func (b *BotAPI) Run() error {
-	g := errgroup.Group{}
 	goScrape := map[bool]func() error{
 		true:  b.configureWebhook,
 		false: b.configureUpdates,
 	}
-	g.Go(func() error {
-		if err := b.configureLogger(); err != nil {
-			logrus.Errorln("configure logger:", err)
-			return err
-		}
+	if err := b.configureLogger(); err != nil {
+		logrus.Errorln("configure logger:", err)
+		return err
+	}
 
-		if err := goScrape[b.config.Webhook.IsWebhook](); err != nil {
-			return err
-		}
-		return nil
-	})
-	if err := g.Wait(); err != nil {
+	if err := goScrape[b.config.Webhook.IsWebhook](); err != nil {
 		return err
 	}
 	b.logger.Infof("Authorized on account %s, debuging mode: %t", b.bot.Self.UserName, b.config.BotLogLevel)
@@ -86,17 +75,14 @@ func (b *BotAPI) configureWebhook() error {
 	b.updates = b.bot.ListenForWebhook("/" + b.config.Token)
 
 	errCh := make(chan error)
-	defer close(errCh)
 	go func() {
+		defer close(errCh)
 		if err := http.ListenAndServeTLS(b.config.Webhook.Addr, "cert.pem", "key.pem", nil); err != nil {
 			errCh <- err
 		}
 	}()
 
-	if err := <-errCh; err != nil {
-		return err
-	}
-	return nil
+	return <-errCh
 }
 
 func (b *BotAPI) removeWebhook() error {
