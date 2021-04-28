@@ -66,7 +66,7 @@ func (b *BotAPI) Run() error {
 	b.logger.Infof("Authorized on account %s, debuging mode: %t", b.bot.Self.UserName, b.config.BotLogLevel)
 	// TODO: error webhook and maybe ctx
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
+	defer cancel()
 	return errors.Wrap(b.handleUpdates(ctx), "handle updates:")
 }
 
