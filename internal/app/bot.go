@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -12,12 +13,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var (
+	ErrUnauthorized = errors.New("401 unauthorized")
+	ErrParse        = errors.New("error")
+)
+
+var (
+	EmptyMessage = ""
+	Start        = "start"
+	Unknown      = "unknown"
+	WrongLink    = "wrong_link"
+)
+
 type BotAPI struct {
 	config  *Config
 	logger  *logrus.Logger
 	bot     *api.BotAPI
 	scrape  *scrape.Scrape
 	updates api.UpdatesChannel
+	ct      chan api.Chattable
 }
 
 func New(config *Config) (*BotAPI, error) {
@@ -25,6 +39,7 @@ func New(config *Config) (*BotAPI, error) {
 		config: config,
 		logger: logrus.New(),
 		scrape: scrape.New(config.Scraper),
+		ct:     make(chan api.Chattable, 100),
 	}
 	bot, err := api.NewBotAPI(config.Token)
 	if err != nil {
@@ -49,8 +64,10 @@ func (b *BotAPI) Run() error {
 		return err
 	}
 	b.logger.Infof("Authorized on account %s, debuging mode: %t", b.bot.Self.UserName, b.config.BotLogLevel)
-	// TODO: error for webhook
-	return errors.Wrap(b.handleUpdates(), "handle updates:")
+	// TODO: error webhook and maybe ctx
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	return errors.Wrap(b.handleUpdates(ctx), "handle updates:")
 }
 
 func (b *BotAPI) configureWebhook() error {
@@ -81,7 +98,6 @@ func (b *BotAPI) configureWebhook() error {
 			errCh <- err
 		}
 	}()
-
 	return <-errCh
 }
 
@@ -118,7 +134,31 @@ func (b *BotAPI) configureLogger() error {
 	return nil
 }
 
-func (b *BotAPI) handleUpdates() error {
+func (b *BotAPI) handleUpdates(ctx context.Context) error {
+	errCh := make(chan error)
+	defer close(errCh)
+	go func() {
+		for {
+			select {
+			case msg := <-b.ct:
+				if _, err := b.bot.Send(msg); err != nil {
+					errCh <- err
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	go func() {
+		for {
+			select {
+			case err := <-errCh:
+				b.logger.Errorln(err)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 	for update := range b.updates {
 		if update.Message == nil {
 			continue
@@ -127,47 +167,34 @@ func (b *BotAPI) handleUpdates() error {
 		userID := int64(update.Message.From.ID)
 		replyToUser := api.NewMessage(userID, "")
 		if !verifyUser(user, b.config.AccessUsers...) {
-			replyToUser.Text = "401 Unauthorized"
-			if _, err := b.bot.Send(replyToUser); err != nil {
-				b.logger.Println("send error:", err)
-				return err
-			}
+			replyToUser.Text = ErrUnauthorized.Error()
+			b.ct <- replyToUser
 			continue
 		}
 
 		if update.Message.IsCommand() {
-			if update.Message.Command() == "start" {
-				replyToUser.Text = b.config.Text["first_message"]
+			if update.Message.Command() == Start {
+				replyToUser.Text = b.config.Text[Start]
 			} else {
-				replyToUser.Text = b.config.Text["unknown"]
+				replyToUser.Text = b.config.Text[Unknown]
 			}
-			if _, err := b.bot.Send(replyToUser); err != nil {
-				b.logger.Println("send error:", err)
-				return err
-			}
+			b.ct <- replyToUser
 			continue
 		}
-		if update.Message.Text == "" || !verifyLink(
+		if update.Message.Text == EmptyMessage || !verifyLink(
 			update.Message.Text,
 			b.config.Scraper.Medium,
 			b.config.Scraper.WebSite) {
-			replyToUser.Text = b.config.Text["wrong_link"]
-			if _, err := b.bot.Send(replyToUser); err != nil {
-				b.logger.Println("send error:", err)
-				return err
-			}
+			replyToUser.Text = b.config.Text[WrongLink]
+			b.ct <- replyToUser
 			continue
 		}
 		if size, err := b.scrape.GetCountSymbols(update.Message.Text); err != nil {
-			b.logger.Println("get count:", err)
-			replyToUser.Text = fmt.Sprintf("%s: %v", b.config.Text["error"], err)
+			replyToUser.Text = fmt.Sprintf("%s: %v", ErrParse.Error(), err)
 		} else {
 			replyToUser.Text = strconv.Itoa(size)
 		}
-		if _, err := b.bot.Send(replyToUser); err != nil {
-			b.logger.Println("send error:", err)
-			return err
-		}
+		b.ct <- replyToUser
 	}
 	return nil
 }
